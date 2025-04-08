@@ -245,6 +245,10 @@ load_tiger <- function(url,
                    quiet = TRUE, stringsAsFactors = FALSE,
                    wkt_filter = wkt_filter)
 
+    # Clean Up
+    unlink(exdir, recursive = TRUE, force = TRUE)
+    unlink(file_loc, recursive = TRUE, force = TRUE)
+
     if (is.na(st_crs(obj)$proj4string)) {
 
       st_crs(obj) <- "+proj=longlat +datum=NAD83 +no_defs"
