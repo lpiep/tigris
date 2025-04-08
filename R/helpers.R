@@ -74,7 +74,7 @@ load_tiger <- function(url,
 
   # Process filter_by
   wkt_filter <- input_to_wkt(filter_by)
-  
+
   # Modify URL for FTP if needed
   if (protocol == "ftp" && grepl("^https://www2", url)) {
     url <- gsub("^https://www2", "ftp://ftp2", url)
@@ -214,8 +214,8 @@ load_tiger <- function(url,
 
   } else {
 
-    tmp <- tempdir()
-    file_loc <- file.path(tmp, tiger_file)
+    file_loc <- tempfile(fileext = '.zip')
+    unlink(file_loc, recursive = TRUE, force = TRUE)
 
     if (grepl("^ftp://", url)) {
       # Use download.file for FTP URLs with timeout
@@ -235,11 +235,13 @@ load_tiger <- function(url,
       }
     }
 
-    unzip(file_loc, exdir = tmp)
+    exdir <- tempfile()
+    unlink(exdir, recursive = TRUE, force = TRUE)
+    unzip(file_loc, exdir = exdir)
     shape <- gsub(".zip", "", tiger_file)
     shape <- gsub("_shp", "", shape) # for historic tracts
 
-    obj <- st_read(dsn = tmp, layer = shape,
+    obj <- st_read(dsn = exdir, layer = shape,
                    quiet = TRUE, stringsAsFactors = FALSE,
                    wkt_filter = wkt_filter)
 
