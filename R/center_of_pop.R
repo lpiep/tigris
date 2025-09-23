@@ -61,12 +61,6 @@ popcenters <- function(geography = c('state', 'county', 'tract', 'blockgroup'), 
     )
     url <- paste0('https://www2.census.gov/geo/docs/reference/', url)
 
-    skip <- case_when(
-        year %in% c(2010, 2020) ~ 0,
-        year == 2000 && geography == 'state' ~ 2,
-        year == 2000 ~ 0
-    )
-
     if(geography == 'state'){ 
         col.names <- c('STATEFP', 'STNAME', 'POPULATION', 'LATITUDE', 'LONGITUDE') 
         colClasses <- c('character', 'character', 'integer', 'numeric', 'numeric') 
@@ -87,12 +81,17 @@ popcenters <- function(geography = c('state', 'county', 'tract', 'blockgroup'), 
         col.names <- c('STATEFP', 'COUNTYFP', 'TRACTCE', 'BLKGRPCE', 'POPULATION', 'LATITUDE', 'LONGITUDE')
         colClasses <- c('character', 'character', 'character', 'character', 'integer', 'numeric', 'numeric')
     }
-
-    if(geography == 'state' && year == 2000){
-        dat <- read.fwf(url, widths = c(5, 20, 10, 12, 12), skip = 5, col.names = col.names, colClasses = colClasses) 
+    
+    if(year == 2000){
+        header <- FALSE
     }else{
-        dat <- read.csv(url, skip = skip, col.names = col.names, colClasses = colClasses)
+        header <- TRUE
+    }
+    if(geography == 'state' && year == 2000){
+        dat <- read.fwf(url, widths = c(5, 20, 10, 12, 12), skip = 4, col.names = col.names, colClasses = colClasses) 
+    }else{
+        dat <- read.csv(url, col.names = col.names, colClasses = colClasses, header = header, na.strings = c('', 'NA', '+.', '-.'))
     }
     dat <- dat %>% mutate(across(where(is.character), stringr::str_trim))
-    st_as_sf(dat, coords = c('LONGITUDE', 'LATITUDE'), crs = 4267)
+    st_as_sf(dat, coords = c('LONGITUDE', 'LATITUDE'), crs = 4267, na.fail = FALSE)
 }
